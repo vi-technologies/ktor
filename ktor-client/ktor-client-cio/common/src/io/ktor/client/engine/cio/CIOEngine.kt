@@ -8,20 +8,20 @@ import io.ktor.client.engine.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.network.selector.*
+import io.ktor.util.collections.*
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
-import java.io.*
-import java.net.*
-import java.util.concurrent.*
 
 internal class CIOEngine(
     override val config: CIOEngineConfig
-) : HttpClientJvmEngine("ktor-cio") {
-    private val endpoints = ConcurrentHashMap<String, Endpoint>()
+) : CallScope("ktor-cio"), HttpClientEngine {
+    override val dispatcher: CoroutineDispatcher by lazy { createClientDispatcher(config.threadsCount) }
+
+    private val endpoints = ConcurrentMap<String, Endpoint>()
 
     @UseExperimental(InternalCoroutinesApi::class)
-    private val selectorManager by lazy { ActorSelectorManager(dispatcher) }
+    private val selectorManager: SelectorManager by lazy { platformSelectorManager(dispatcher) }
 
     private val connectionFactory = ConnectionFactory(selectorManager, config.maxConnectionsCount)
     private val closed = atomic(false)
@@ -84,7 +84,7 @@ internal class CIOEngine(
 
         val endpointId = "$host:$port:$protocol"
 
-        return endpoints.computeIfAbsentWeak(endpointId) {
+        return endpoints.getOrDefault(endpointId) {
             val secure = (protocol.isSecure())
             Endpoint(
                 host, port, proxy != null, secure,
@@ -98,16 +98,3 @@ internal class CIOEngine(
 
 @Suppress("KDocMissingDocumentation")
 class ClientClosedException(override val cause: Throwable? = null) : IllegalStateException("Client already closed")
-
-private fun <K : Any, V : Closeable> ConcurrentHashMap<K, V>.computeIfAbsentWeak(key: K, block: (K) -> V): V {
-    get(key)?.let { return it }
-
-    val newValue = block(key)
-    val result = putIfAbsent(key, newValue)
-    if (result != null) {
-        newValue.close()
-        return result
-    }
-
-    return newValue
-}
