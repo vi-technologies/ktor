@@ -74,6 +74,11 @@ kotlin {
             configure([mingwX64Test]) {
                 environment "PATH": "C:\\msys64\\mingw64\\bin;C:\\Tools\\msys64\\mingw64\\bin"
             }
+            configure([linuxX64]) {
+                compilations.test {
+                    extraOpts "-opt"
+                }
+            }
         }
 
         project.ext.nativeCompilations = project.ext.nativeTargets.collect { it.compilations.main }
