@@ -97,7 +97,7 @@ internal class CIOEngine(
 }
 
 @Suppress("KDocMissingDocumentation")
-class ClientClosedException(override val cause: Throwable? = null) : IllegalStateException("Client already closed")
+class ClientClosedException(cause: Throwable? = null) : IllegalStateException("Client already closed", cause)
 
 private fun <K : Any, V : Closeable> ConcurrentHashMap<K, V>.computeIfAbsentWeak(key: K, block: (K) -> V): V {
     get(key)?.let { return it }

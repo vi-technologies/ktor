@@ -6,7 +6,7 @@ package io.ktor.features
 
 import io.ktor.http.*
 import io.ktor.util.*
-import java.lang.Exception
+import kotlinx.coroutines.*
 import kotlin.reflect.*
 import kotlin.reflect.full.*
 
@@ -32,8 +32,12 @@ class NotFoundException(message: String? = "Resource not found") : Exception(mes
  * @property parameterName of missing request parameter
  */
 @KtorExperimentalAPI
-class MissingRequestParameterException(val parameterName: String) :
-    BadRequestException("Request parameter $parameterName is missing")
+class MissingRequestParameterException(
+    val parameterName: String
+) : BadRequestException("Request parameter $parameterName is missing"),
+    CopyableThrowable<MissingRequestParameterException> {
+    override fun createCopy(): MissingRequestParameterException? = MissingRequestParameterException(parameterName)
+}
 
 /**
  * This exception is thrown when a required parameter with name [parameterName] couldn't be converted to the [type]
@@ -42,7 +46,11 @@ class MissingRequestParameterException(val parameterName: String) :
  */
 @KtorExperimentalAPI
 class ParameterConversionException(val parameterName: String, val type: String, cause: Throwable? = null) :
-    BadRequestException("Request parameter $parameterName couldn't be parsed/converted to $type", cause)
+    BadRequestException("Request parameter $parameterName couldn't be parsed/converted to $type", cause),
+    CopyableThrowable<ParameterConversionException> {
+    override fun createCopy(): ParameterConversionException? = ParameterConversionException(parameterName, type, this)
+
+}
 
 /**
  * Thrown when content cannot be transformed to the desired type.
