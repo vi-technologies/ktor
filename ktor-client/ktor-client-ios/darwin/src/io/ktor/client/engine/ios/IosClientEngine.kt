@@ -116,6 +116,7 @@ internal class IosClientEngine(override val config: IosClientEngineConfig) : Htt
 
             config.requestConfig.let { nativeRequest.it() }
             session.dataTaskWithRequest(nativeRequest).resume()
+        }.invokeOnCompletion {
             session.finishTasksAndInvalidate()
         }
     }
