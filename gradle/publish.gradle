@@ -103,7 +103,7 @@ bintray {
     override = true
 
     pkg {
-        userOrg = 'kotlin'
+        userOrg = 'vi-technologies'
         repo = 'ktor'
         name = 'ktor'
         licenses = ['Apache-2.0']
