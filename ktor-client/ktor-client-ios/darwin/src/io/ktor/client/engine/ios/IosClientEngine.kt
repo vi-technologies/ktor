@@ -25,6 +25,9 @@ internal class IosClientEngine(override val config: IosClientEngineConfig) : Htt
 
     override val coroutineContext: CoroutineContext = dispatcher + SupervisorJob()
 
+    // Work around K/N memory management bugs
+    private val delegateCache: MutableMap<NSURLSession, NSURLSessionDataDelegateProtocol> = HashMap()
+
     override suspend fun execute(
         data: HttpRequestData
     ): HttpResponseData = suspendCancellableCoroutine { continuation ->
@@ -89,6 +92,7 @@ internal class IosClientEngine(override val config: IosClientEngineConfig) : Htt
             NSURLSessionConfiguration.defaultSessionConfiguration(),
             delegate, delegateQueue = NSOperationQueue.mainQueue()
         )
+        delegateCache[session] = delegate
 
         val url = URLBuilder().takeFrom(data.url).buildString()
         val nativeRequest = NSMutableURLRequest.requestWithURL(NSURL(string = url))
@@ -116,7 +120,9 @@ internal class IosClientEngine(override val config: IosClientEngineConfig) : Htt
 
             config.requestConfig.let { nativeRequest.it() }
             session.dataTaskWithRequest(nativeRequest).resume()
-        }.invokeOnCompletion {
+        }
+
+        callContext[Job]?.invokeOnCompletion {
             session.finishTasksAndInvalidate()
         }
     }
