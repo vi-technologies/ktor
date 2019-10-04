@@ -1,6 +1,7 @@
 
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
 
 apply from: project.rootProject.file('gradle/pom.gradle')
 
