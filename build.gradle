@@ -49,13 +49,9 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
         classpath "me.champeau.gradle:jmh-gradle-plugin:$jmh_plugin_version"
         classpath "org.jetbrains.kotlinx:kotlinx.benchmark.gradle:$benchmarks_version"
-        classpath "kotlinx.team:kotlinx.team.infra:$infra_version"
         classpath "io.spring.gradle:dependency-management-plugin:$spring_dependency_management_version"
     }
 }
-
-
-apply plugin: 'kotlinx.team.infra'
 
 ext.configuredVersion = project.hasProperty("releaseVersion") ? project.releaseVersion : project.version
 ext.globalM2 = "$buildDir/m2"
@@ -182,16 +178,18 @@ task rootAllTest(type: org.jetbrains.kotlin.gradle.testing.internal.KotlinTestRe
 
     allprojects {
         it.afterEvaluate {
-            def projectTests = it.tasks.findByName("allTests")
-            if (projectTests != null) {
+            if (it.tasks.findByName("allTests") != null) {
+                def projectTests = it.tasks.named("allTests")
                 rootAllTest.addChild(projectTests)
                 rootAllTest.dependsOn(projectTests)
             }
         }
     }
 
-    project.gradle.taskGraph.whenReady { graph ->
-        rootAllTest.maybeOverrideReporting(graph)
+    beforeEvaluate {
+        project.gradle.taskGraph.whenReady { graph ->
+            rootAllTest.maybeOverrideReporting(graph)
+        }
     }
 }
 
