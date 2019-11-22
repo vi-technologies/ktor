@@ -116,10 +116,11 @@ internal class IosClientEngine(override val config: IosClientEngineConfig) : Htt
                 }
 
                 body?.let { nativeRequest.setHTTPBody(it) }
-
-                config.requestConfig(nativeRequest)
-                session.dataTaskWithRequest(nativeRequest).resume()
-            }
+                
+            config.requestConfig(nativeRequest)
+            session.dataTaskWithRequest(nativeRequest).resume()
+        }.invokeOnCompletion {
+            session.finishTasksAndInvalidate()
         }
     }
 
