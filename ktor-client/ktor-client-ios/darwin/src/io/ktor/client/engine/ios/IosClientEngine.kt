@@ -116,7 +116,6 @@ internal class IosClientEngine(override val config: IosClientEngineConfig) : Htt
                 }
 
                 body?.let { nativeRequest.setHTTPBody(it) }
-
                 config.requestConfig(nativeRequest)
                 session.dataTaskWithRequest(nativeRequest).resume()
             }.invokeOnCompletion {
@@ -143,6 +142,7 @@ internal class IosClientEngine(override val config: IosClientEngineConfig) : Htt
             kCFProxyTypeKey to type
         )
     }
+
 }
 
 
